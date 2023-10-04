@@ -7,6 +7,7 @@ import Websocket from "./modules/websocket/websocket";
 import { map } from "rxjs/operators";
 import { NFLData } from "./interfaces/nfl-api.interface";
 import fs from "fs";
+import path from "path";
 
 import { teams, teamsByAbbr } from "./interfaces/team-db.interface";
 import { Game, addGames, games } from "./interfaces/game-db.interface";
@@ -72,7 +73,7 @@ const apiSearchParams = {
   leagueCode: "FBP",
 };
 
-fs.readFile("/home/pi/db/games", (err, data) => {});
+fs.readFile("db/games", (err, data) => {});
 
 const allWeekPromises: Promise<Response>[] = [];
 for (let week = 1; week <= 18; week++) {
@@ -98,10 +99,14 @@ Promise.all(allWeekPromises).then((responses) => {
     }
     console.log(Object.values(games).length);
 
-    for (let i = 0; i < 3; i++) {
-      console.log('====================================================');
-      Object.values(games)[i].toString();
-    }
+    //for (let i = 0; i < 3; i++) {
+    //  console.log('====================================================');
+    //  Object.values(games)[i].toString();
+    //}
+
+    const filePath = path.join(__dirname, '/../db/games');
+    console.log(filePath)
+    fs.writeFile(filePath, JSON.stringify(Object.values(games)), () => {});
   });
 });
 
