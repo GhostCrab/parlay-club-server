@@ -5,12 +5,10 @@ import morgan from "morgan";
 import routes from "./routes/posts";
 import Websocket from "./modules/websocket/websocket";
 import { map } from "rxjs/operators";
-import { NFLData } from "./interfaces/nfl-api.interface";
-import fs from "fs";
-import path from "path";
+import { NFLData, NFLResult } from "./interfaces/nfl-api.interface";
 
 import { teams, teamsByAbbr } from "./interfaces/team-db.interface";
-import { Game, addGames, games } from "./interfaces/game-db.interface";
+import { Game, addGames, games, IGame, gamesByWeekTeam } from "./interfaces/game-db.interface";
 
 const router: Express = express();
 
@@ -65,48 +63,43 @@ io.on("connection", (socket) => {
   });
 });
 
-//initialize
-const apiUrl =
-  "https://metabet.static.api.areyouwatchingthis.com/api/odds.json";
-const apiSearchParams = {
-  apiKey: "219f64094f67ed781035f5f7a08840fc",
-  leagueCode: "FBP",
-};
-
-fs.readFile("db/games", (err, data) => {});
-
-const allWeekPromises: Promise<Response>[] = [];
-for (let week = 1; week <= 18; week++) {
-  const url = new URL(apiUrl);
-  for (const [key, value] of Object.entries(apiSearchParams)) {
-    url.searchParams.set(key, value);
-  }
-
-  url.searchParams.set("round", `Week ${week}`);
-  allWeekPromises.push(fetch(url.href));
-}
-
-Promise.all(allWeekPromises).then((responses) => {
-  const allResponsesPromises: Promise<NFLData>[] = [];
-  for (const response of responses) {
-    allResponsesPromises.push(response.json());;
-  }
-
-  Promise.all(allResponsesPromises).then((datas) => {
-    for (const data of datas) {
-      console.log(`Got Results ${data.results[0].round}`);
-      addGames(data.results);
+if (false) {
+  const apiUrl =
+    "https://metabet.static.api.areyouwatchingthis.com/api/odds.json";
+  const apiSearchParams = {
+    apiKey: "219f64094f67ed781035f5f7a08840fc",
+    leagueCode: "FBP",
+  };
+  const allWeekPromises: Promise<Response>[] = [];
+  for (let week = 1; week <= 18; week++) {
+    const url = new URL(apiUrl);
+    for (const [key, value] of Object.entries(apiSearchParams)) {
+      url.searchParams.set(key, value);
     }
-    console.log(Object.values(games).length);
 
-    //for (let i = 0; i < 3; i++) {
-    //  console.log('====================================================');
-    //  Object.values(games)[i].toString();
-    //}
+    url.searchParams.set("round", `Week ${week}`);
+    allWeekPromises.push(fetch(url.href));
+  }
 
-    const filePath = path.join(__dirname, '/../db/games');
-    console.log(filePath)
-    fs.writeFile(filePath, JSON.stringify(Object.values(games)), () => {});
+  Promise.all(allWeekPromises).then((responses) => {
+    const allResponsesPromises: Promise<NFLData>[] = [];
+    for (const response of responses) {
+      allResponsesPromises.push(response.json());;
+    }
+
+    Promise.all(allResponsesPromises).then((datas) => {
+      for (const data of datas) {
+        console.log(`Got Results ${data.results[0].round}`);
+        addGames(data.results);
+      }
+      console.log(Object.values(games).length);
+
+      //for (let i = 0; i < 3; i++) {
+      //  console.log('====================================================');
+      //  Object.values(games)[i].toString();
+      //}
+
+      fs.writeFile(dbPath, JSON.stringify(Object.values(games)), () => {});
+    });
   });
-});
-
+}

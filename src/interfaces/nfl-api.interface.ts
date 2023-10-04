@@ -27,7 +27,7 @@ export interface NFLResult {
   odds: NFLOdds[];
   points: number;
   pointsLevel: string;
-  rationale: string;
+  rationale?: string;
   round: string;
   sport: string;
   team1City: string;
@@ -35,15 +35,15 @@ export interface NFLResult {
   team1ID: number;
   team1Initials: string;
   team1Name: string;
-  team1Score: number;
+  team1Score?: number;
   team2City: string;
   team2Color: string;
   team2ID: number;
   team2Initials: string;
   team2Name: string;
-  team2Score: number;
-  time: number;
-  timeLeft: string;
+  team2Score?: number;
+  time?: number;
+  timeLeft?: string;
 }
 
 export interface NFLData {
