@@ -72,12 +72,6 @@ const apiSearchParams = {
   leagueCode: "FBP",
 };
 
-// https.get(url.href, (response) => {
-//   response.on('data', data => {
-//     console.log(data);
-//   })
-// });
-
 fs.readFile("/home/pi/db/games", (err, data) => {});
 
 const allWeekPromises: Promise<Response>[] = [];
@@ -88,15 +82,6 @@ for (let week = 1; week <= 18; week++) {
   }
 
   url.searchParams.set("round", `Week ${week}`);
-
-  // fetch(url.href).then((response) => {
-  //   response.json().then((data: NFLData) => {
-  //     console.log(`Got Results Week ${week}`);
-  //     addGames(data.results);
-  //     resultCount++;
-  //   });
-  // });
-
   allWeekPromises.push(fetch(url.href));
 }
 
@@ -120,42 +105,3 @@ Promise.all(allWeekPromises).then((responses) => {
   });
 });
 
-//fs.writeFile('/home/pi/db/games', JSON.stringify(data.results), ()=>{});
-
-// http.get(url.href).pipe(
-//   map((data) => {
-//     const newGames: IParlayGame[] = [];
-//     const updatedGames: IParlayGame[] = [];
-//     for (const result of data.results) {
-//       try {
-//         const dbGame = this.gamedb.fromTeamDate(
-//           result.team2Name,
-//           result.date
-//         );
-//         const refGame = new ParlayGame(
-//           result.team2Name,
-//           result.team1Name,
-//           result.date,
-//           this.teamdb
-//         );
-//         refGame.updateFromAPI(result);
-//         refGame.updateOddsFromAPI(result);
-//         dbGame.updateAll(refGame);
-//         updatedGames.push(dbGame);
-//       } catch (e) {
-//         const newGame = new ParlayGame(
-//           result.team2Name,
-//           result.team1Name,
-//           result.date,
-//           this.teamdb
-//         );
-//         newGame.updateFromAPI(result);
-//         newGame.updateOddsFromAPI(result);
-//         console.log(`Adding new game: ${newGame.toString()}`);
-//         newGames.push(newGame);
-//       }
-//     }
-//     this.gamesSub$.next([...newGames, ...updatedGames])
-//     return [newGames, updatedGames];
-//   })
-// );
