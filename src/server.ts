@@ -101,17 +101,26 @@ for (let week = 1; week <= 18; week++) {
 }
 
 Promise.all(allWeekPromises).then((responses) => {
+  const allResponsesPromises: Promise<NFLData>[] = [];
   for (const response of responses) {
-    response.json().then((data: NFLData) => {
+    allResponsesPromises.push(response.json());;
+  }
+
+  Promise.all(allResponsesPromises).then((datas) => {
+    for (const data of datas) {
       console.log(`Got Results ${data.results[0].round}`);
       addGames(data.results);
-    });
-  }
+    }
+    console.log(Object.values(games).length);
+
+    for (let i = 0; i < 3; i++) {
+      console.log('====================================================');
+      Object.values(games)[i].toString();
+    }
+  });
 });
 
 //fs.writeFile('/home/pi/db/games', JSON.stringify(data.results), ()=>{});
-
-console.log(Object.values(games).length);
 
 // http.get(url.href).pipe(
 //   map((data) => {
