@@ -4,8 +4,9 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "dev": "esrun --watch src/server.ts",
-    "build": "rm -rf build/ && prettier --write src/ && tsc"
+    "dev-es": "esrun --watch src/server.ts",
+    "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --ignore \"src/**/*.spec.ts\" --exec \"ts-node src/server.ts\"",
+    "build": "rm -rf build/ && tsc"
   },
   "author": "",
   "license": "ISC",
@@ -15,9 +16,12 @@
     "@types/morgan": "^1.9.6",
     "express": "^4.18.2",
     "morgan": "^1.10.0",
-    "nodemon": "^3.0.1",
     "rxjs": "^7.8.1",
     "socket.io": "^4.7.2",
     "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1"
   }
 }

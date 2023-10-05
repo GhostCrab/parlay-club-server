@@ -1,22 +1,64 @@
 import { fmt, postfmt } from "../modules/utility";
-import { NFLResult } from "./nfl-api.interface";
+
+export interface GameOdds {
+  date: number;
+  moneyLine1: number;
+  moneyLine2: number;
+  overUnder: number;
+  overUnderLineOver: number;
+  overUnderLineUnder: number;
+  provider: string;
+  spread: number;
+  spreadLine1: number;
+  spreadLine2: number;
+}
+
+export interface GameData {
+  date: number;
+  gameID: number;
+  headline: string;
+  highPoints: number;
+  leagueCode: string;
+  location: string;
+  odds: GameOdds[];
+  points: number;
+  pointsLevel: string;
+  rationale?: string;
+  round: string;
+  sport: string;
+  team1City: string;
+  team1Color: string;
+  team1ID: number;
+  team1Initials: string;
+  team1Name: string;
+  team1Score?: number;
+  team2City: string;
+  team2Color: string;
+  team2ID: number;
+  team2Initials: string;
+  team2Name: string;
+  team2Score?: number;
+  time?: number;
+  timeLeft?: string;
+}
 
 export interface IGame {
-  data: NFLResult;
+  data: GameData;
   oddsCutoffDate: Date;
 
-  update(data: NFLResult): boolean;
+  update(data: GameData): boolean;
   isComplete(): boolean;
-  getData(): NFLResult;
+  getData(): GameData;
   getWeek(): number;
   toString(): void;
+  toString(showWeek: boolean): void;
 }
 
 export class Game implements IGame {
-  data: NFLResult;
+  data: GameData;
   oddsCutoffDate: Date;
 
-  constructor(data: NFLResult) {
+  constructor(data: GameData) {
     this.data = fixOdds(data);
 
     this.updateCutoffDate();
@@ -124,7 +166,7 @@ export class Game implements IGame {
     return this.data.timeLeft !== undefined && !this.isComplete();
   }
 
-  public update(data: NFLResult, onlyImportant = true): boolean {
+  public update(data: GameData, onlyImportant = true): boolean {
     data = fixOdds(data);
     let updated = false;
     let important = false;
@@ -373,7 +415,7 @@ export class Game implements IGame {
   }
 }
 
-function fixOdds(data: NFLResult): NFLResult {
+function fixOdds(data: GameData): GameData {
   data.odds = data.odds.filter((a) => a.provider === "CONSENSUS");
   if (data.odds.length) {
     data.odds[0].spread = Math.round(data.odds[0].spread * 2) / 2;

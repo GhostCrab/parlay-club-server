@@ -1,4 +1,5 @@
 import http from "http";
+import https from "https";
 import express, { Express } from "express";
 import morgan from "morgan";
 import routes from "./routes/posts";
@@ -6,6 +7,7 @@ import Websocket from "./modules/websocket";
 import { NFLData } from "./interfaces/nfl-api.interface";
 import GameDB from "./modules/game-db";
 import NFLAPI from "./modules/nfl-api";
+import PickDB from "./modules/pick-db";
 
 const router: Express = express();
 
@@ -47,7 +49,7 @@ router.use((req, res, next) => {
 });
 
 /** Server */
-const httpServer = http.createServer(router);
+const httpServer = https.createServer(router);
 const io = Websocket.getInstance(httpServer);
 const PORT: any = process.env.PORT ?? 3000;
 httpServer.listen(PORT, () =>
@@ -61,21 +63,24 @@ io.on("connection", (socket) => {
 });
 
 async function main(): Promise<void> {
-  GameDB.init();
-
   const gdb = GameDB.getInstance();
-  NFLAPI.getAllGames().subscribe( responses => {
-    const allResponsesPromises: Promise<NFLData>[] = [];
-    for (const response of responses) {
-      allResponsesPromises.push(response.json());
-    }
+  // NFLAPI.getAllGames().subscribe( responses => {
+  //   const allResponsesPromises: Promise<NFLData>[] = [];
+  //   for (const response of responses) {
+  //     allResponsesPromises.push(response.json());
+  //   }
 
-    Promise.all(allResponsesPromises).then((datas) => {
-      for (const data of datas) {
-        gdb.ingest(data.results);
-      }
-    });
-  });
+  //   Promise.all(allResponsesPromises).then((datas) => {
+  //     for (const data of datas) {
+  //       gdb.ingest(data.results);
+  //     }
+  //   });
+  // });
+
+  const pdb = PickDB.getInstance();
+  for (const pick of pdb.allPicks()) {
+    console.log(pick.toString());
+  }
 }
 
 main().catch(console.error);
