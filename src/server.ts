@@ -1,5 +1,4 @@
 import http from "http";
-import https from "https";
 import express, { Express } from "express";
 import morgan from "morgan";
 import routes from "./routes/posts";
@@ -49,7 +48,7 @@ router.use((req, res, next) => {
 });
 
 /** Server */
-const httpServer = https.createServer(router);
+const httpServer = http.createServer(router);
 const io = Websocket.getInstance(httpServer);
 const PORT: any = process.env.PORT ?? 3000;
 httpServer.listen(PORT, () =>
