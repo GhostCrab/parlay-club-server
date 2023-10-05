@@ -341,14 +341,6 @@ for (const team of Object.values(teams)) {
   teamsByAbbr[team.abbr] = team;
 }
 
-console.log(teams[0].toString());
-console.log(teamsByAbbr["PSH"].toString());
-
-teams[0].name = "TEST";
-
-console.log(teams[0].toString());
-console.log(teamsByAbbr["PSH"].toString());
-
 export function fromName(name: string) {
   const capName = name.toUpperCase();
   for (const team of Object.values(teams)) {
