@@ -1,5 +1,16 @@
 import { fmt, postfmt } from "../modules/utility";
 
+export enum WEEKDAY {
+  sun = 0,
+  mon,
+  tue,
+  wed,
+  thu,
+  fri,
+  sat,
+  sunmon,
+}
+
 export interface GameOdds {
   date: number;
   moneyLine1: number;
@@ -44,7 +55,9 @@ export interface GameData {
 
 export interface IGame {
   data: GameData;
+  date: Date;
   oddsCutoffDate: Date;
+  revealDate: Date;
 
   update(data: GameData): boolean;
   isComplete(): boolean;
@@ -56,21 +69,42 @@ export interface IGame {
 
 export class Game implements IGame {
   data: GameData;
+  date: Date;
   oddsCutoffDate: Date;
+  revealDate: Date;
 
   constructor(data: GameData) {
     this.data = fixOdds(data);
 
-    this.updateCutoffDate();
+    this.updateDates();
   }
 
-  private updateCutoffDate() {
-    const date = new Date(this.data.date);
-    let weekDay = date.getDay();
-    if (weekDay < 4) weekDay += 7;
+  private updateDates() {
+    // date
+    this.date = new Date(this.data.date);
+    const dstOffset = this.date.isDstObserved() ? 0 : 1;
+
+    // oddsCutoffDate
     this.oddsCutoffDate = new Date(this.data.date);
-    this.oddsCutoffDate.setHours(0, 0, 0, 0);
-    this.oddsCutoffDate.setDate(this.oddsCutoffDate.getDate() - (weekDay - 4));
+    this.oddsCutoffDate.setUTCHours(this.oddsCutoffDate.getUTCHours() - 7);
+    let weekDay: WEEKDAY = this.oddsCutoffDate.getUTCDay();
+    if (weekDay < WEEKDAY.thu) weekDay += 7;    
+    this.oddsCutoffDate.setUTCDate(this.oddsCutoffDate.getUTCDate() - (weekDay - 4));
+    this.oddsCutoffDate.setUTCHours(7, 0, 0, 0);
+
+    // revealDate
+    this.revealDate = new Date(this.data.date);
+    this.revealDate.setUTCHours(this.revealDate.getUTCHours() - 7);
+    weekDay = this.revealDate.getUTCDay();
+    
+    if (weekDay === WEEKDAY.sat)
+      this.revealDate.setUTCHours(20 + dstOffset, 30, 0, 0);
+    if (weekDay === WEEKDAY.mon)
+      this.revealDate.setUTCDate(this.revealDate.getUTCDate() - 1);
+    if (weekDay === WEEKDAY.sun || weekDay === WEEKDAY.mon)
+      this.revealDate.setUTCHours(17 + dstOffset, 0, 0, 0);
+    if (weekDay === WEEKDAY.thu || this.revealDate.getTime() > this.date.getTime())
+      this.revealDate = new Date(this.data.date);
   }
 
   public getData() {

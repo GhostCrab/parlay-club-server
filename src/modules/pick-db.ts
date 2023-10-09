@@ -33,6 +33,10 @@ class PickDB {
     return PickDB.picks;
   }
 
+  public addPick(data: PickData) {
+    PickDB.picks.push(new Pick(data));
+  }
+
   public writeDB(): void {
     fs.writeFile(this.dbPath, JSON.stringify(PickDB.picks.map(pick => pick.data)), () => {});
   }
