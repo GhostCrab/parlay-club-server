@@ -1,6 +1,8 @@
 import { Game, GameData, IGame } from "../interfaces/game.interface";
 import fs from "fs";
 import path from "path";
+import { io } from "../server";
+import { ServerData } from "../controllers/posts";
 
 class GameDB {
   private static db: GameDB;
@@ -63,9 +65,15 @@ class GameDB {
         const newGame = this.addGame(result)
         updatedGames.push(newGame)
       } else {
-        if (this.gamesByID[result.gameID].update(result))
+        if (this.gamesByID[result.gameID].update(result)) {
           updatedGames.push(this.gamesByID[result.gameID]);
+        }
       }
+    }
+    
+    if (updatedGames.length) {
+      const message: ServerData = {games:updatedGames.map(game => game.data)}
+      io.emit('message', JSON.stringify(message));
     }
 
     return updatedGames;

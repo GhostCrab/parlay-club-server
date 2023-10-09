@@ -8,7 +8,7 @@ import PickDB from "../modules/pick-db";
 import TeamDB from "../modules/team-db";
 import UserDB from "../modules/user-db";
 
-interface ServerData {
+export interface ServerData {
   users?: UserData[],
   teams?: TeamData[],
   games?: GameData[],

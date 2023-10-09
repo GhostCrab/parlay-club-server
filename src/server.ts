@@ -1,5 +1,5 @@
 import http from "http";
-import express, { Express } from "express";
+import express, { Express, response } from "express";
 import morgan from "morgan";
 import routes from "./routes/posts";
 import Websocket from "./modules/websocket";
@@ -7,6 +7,9 @@ import { NFLData } from "./interfaces/nfl-api.interface";
 import GameDB from "./modules/game-db";
 import NFLAPI from "./modules/nfl-api";
 import PickDB from "./modules/pick-db";
+
+import fs from "fs";
+import path from "path";
 
 const router: Express = express();
 
@@ -49,37 +52,68 @@ router.use((req, res, next) => {
 
 /** Server */
 const httpServer = http.createServer(router);
-const io = Websocket.getInstance(httpServer);
+export const io = Websocket.getInstance(httpServer);
 const PORT: any = process.env.PORT ?? 3000;
 httpServer.listen(PORT, () =>
   console.log(`The server is running on port ${PORT}`),
 );
 
 io.on("connection", (socket) => {
-  socket.on("chat message", (msg) => {
-    io.emit("chat message", msg);
+  socket.on("message", (msg) => {
+    io.emit("message", msg);
   });
 });
 
 async function main(): Promise<void> {
   const gdb = GameDB.getInstance();
-  // NFLAPI.getAllGames().subscribe( responses => {
-  //   const allResponsesPromises: Promise<NFLData>[] = [];
-  //   for (const response of responses) {
-  //     allResponsesPromises.push(response.json());
-  //   }
 
-  //   Promise.all(allResponsesPromises).then((datas) => {
-  //     for (const data of datas) {
-  //       gdb.ingest(data.results);
-  //     }
-  //   });
-  // });
+  const nfldata: Array<NFLData[]> = [];
+  let counter = 0;
 
-  const pdb = PickDB.getInstance();
-  for (const pick of pdb.allPicks()) {
-    console.log(pick.toString());
-  }
+  setInterval(() => {
+    for (const promise of NFLAPI.getAllGamesArr()) {
+      promise.then((result) => {
+        return result.json();
+      }).then((data) => {
+        gdb.ingest(data.results);
+      }).catch((e) => {
+        console.error(`ERROR : Failed nfl api fetch: ${e}`);
+      })
+    }
+  }, 10000);
+
+  //setInterval(() => {
+    // try {
+      
+    //   .subscribe( responses => {
+    //     try {
+    //       for (const response of responses) {
+    //         response.json().then((data) => gdb.ingest(data.results)).catch();
+    //       }
+
+    //       const allResponsesPromises: Promise<NFLData>[] = [];
+    //       for (const response of responses) {
+    //         allResponsesPromises.push(response.json());
+    //       }
+
+    //       Promise.all(allResponsesPromises).then((datas) => {
+    //         for (const data of datas) {
+    //           gdb.ingest(data.results);
+    //         }
+    //       });
+    //     } catch (e) {
+    //       console.error(`ERROR (inside): Failed nfl api fetch: ${e}`);    
+    //     }
+    //   });
+    // } catch (e) {
+    //   console.error(`ERROR: Failed nfl api fetch: ${e}`);
+    // }
+  //}, 10000);
+
+  // const pdb = PickDB.getInstance();
+  // for (const pick of pdb.allPicks()) {
+  //   console.log(pick.toString());
+  // }
 }
 
 main().catch(console.error);
