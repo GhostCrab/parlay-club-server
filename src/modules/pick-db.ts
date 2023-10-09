@@ -2,6 +2,13 @@ import { IPick, Pick, PickData } from "../interfaces/pick.interface";
 
 import fs from "fs";
 import path from "path";
+import { IGame } from "../interfaces/game.interface";
+
+export interface PickSetUpdate {
+  userID: number,
+  week: number,
+  picks: PickData[]
+}
 
 class PickDB {
   private static db: PickDB;
@@ -27,6 +34,18 @@ class PickDB {
     }
 
     return PickDB.db;
+  }
+
+  public ingest(pickData: PickSetUpdate): PickSetUpdate {
+    const gamesThisWeek: IGame[] = [];
+
+    PickDB.picks = PickDB.picks.filter( pick => !(pick.user.data.id === pickData.userID && pick.game.getWeek() === pickData.week) );
+
+    for (const data of pickData.picks) {
+      PickDB.picks.push(new Pick(data));
+    }
+
+    return pickData;
   }
   
   public allPicks(): IPick[] {

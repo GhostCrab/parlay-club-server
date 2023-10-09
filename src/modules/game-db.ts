@@ -1,8 +1,6 @@
 import { Game, GameData, IGame } from "../interfaces/game.interface";
 import fs from "fs";
 import path from "path";
-import { io } from "../server";
-import { ServerData } from "../controllers/posts";
 
 class GameDB {
   private static db: GameDB;
@@ -10,12 +8,18 @@ class GameDB {
 
   private static games: IGame[] = [];
   private gamesByID: Record<number, IGame>;
+  private gamesByWeek: Record<number, IGame[]>;
   private gamesByWeekTeam: Record<number, Record<string, IGame>>;
 
   constructor() {
     this.gamesByID = {};
     this.gamesByWeekTeam = {};
-    for (let i = 1; i <= 18; i++) this.gamesByWeekTeam[i] = {};
+    this.gamesByWeek = {};
+
+    for (let i = 1; i <= 18; i++) {
+      this.gamesByWeekTeam[i] = {};
+      this.gamesByWeek[i] = [];
+    }
   }
 
   public static init() {
@@ -28,15 +32,6 @@ class GameDB {
     for (const result of dbResults) {
       db.addGame(result);
     }
-  
-    // for (const game of Object.values(db.games).sort((a,b) => a.data.date - b.data.date).filter(game => game.getWeek() === 1 || game.getWeek() === 18)) {
-    //   console.log(game.toString());
-    // }
-  
-    // console.log(db.gamesByWeekTeam[16]['PIT'].toString());
-    // for (const prop in db.gamesByWeekTeam[16]['PIT'].data) {
-    //   console.log(`${prop}: ${db.gamesByWeekTeam[16]['PIT'].data[prop]}`);
-    // }
   }
 
   public static getInstance(): GameDB {
@@ -52,6 +47,7 @@ class GameDB {
     const week = game.getWeek();
     GameDB.games.push(game);
     this.gamesByID[result.gameID] = game;
+    this.gamesByWeek[week].push(game);
     this.gamesByWeekTeam[week][game.data.team1Initials] = game;
     this.gamesByWeekTeam[week][game.data.team2Initials] = game;
 
@@ -70,20 +66,19 @@ class GameDB {
         }
       }
     }
-    
-    if (updatedGames.length) {
-      const message: ServerData = {games:updatedGames.map(game => game.data)}
-      io.emit('message', JSON.stringify(message));
-    }
 
     return updatedGames;
   }
 
-  public getGameByTeamAbbrWeek(teamAbbr: string, week: number): IGame {
+  public fromWeekTeam(week: number, teamAbbr: string): IGame {
     if (this.gamesByWeekTeam[week])
       return this.gamesByWeekTeam[week][teamAbbr];
     
     throw new Error(`Attempted to retrieve from an undefined week: ${week}`);
+  }
+
+  public fromWeek(week: number): IGame[] {
+    return this.gamesByWeek[week];
   }
 
   public fromID(id: number) {

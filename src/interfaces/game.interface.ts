@@ -1,5 +1,22 @@
 import { fmt, postfmt } from "../modules/utility";
 
+declare global { 
+  interface Date { 
+    stdTimezoneOffset: () => number;
+    isDstObserved: () => boolean; 
+  } 
+}
+
+Date.prototype.stdTimezoneOffset = function (): number {
+  var jan = new Date(this.getFullYear(), 0, 1);
+  var jul = new Date(this.getFullYear(), 6, 1);
+  return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+}
+
+Date.prototype.isDstObserved = function () {
+  return this.getTimezoneOffset() < this.stdTimezoneOffset();
+}
+
 export enum WEEKDAY {
   sun = 0,
   mon,
@@ -60,6 +77,7 @@ export interface IGame {
   revealDate: Date;
 
   update(data: GameData): boolean;
+  updateOdds(spread: number, ou: number): void;
   isComplete(): boolean;
   getData(): GameData;
   getWeek(): number;
@@ -446,6 +464,15 @@ export class Game implements IGame {
     }
 
     return updated;
+  }
+
+  updateOdds(spread: number, ou: number): void {
+    if(this.data.odds.length === 1) {
+      const odds = this.data.odds[0];
+
+      odds.spread = spread;
+      odds.overUnder = ou;
+    }
   }
 }
 

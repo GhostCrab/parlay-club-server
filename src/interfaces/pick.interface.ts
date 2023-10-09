@@ -13,6 +13,9 @@ export interface PickData {
 
 export interface IPick {
   data: PickData;
+  user: IUser;
+  game: IGame;
+  team: ITeam;
 
   toString(): string;
 }
@@ -24,9 +27,9 @@ export class Pick implements Pick {
   static udb: UserDB = UserDB.getInstance();
   static tdb: TeamDB = TeamDB.getInstance();
 
-  private user: IUser;
-  private game: IGame;
-  private team: ITeam;
+  user: IUser;
+  game: IGame;
+  team: ITeam;
 
   constructor(data: PickData) {
     this.data = data;
