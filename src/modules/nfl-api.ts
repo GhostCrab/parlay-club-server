@@ -21,28 +21,21 @@ class NFLAPI {
     }
 
     return from(Promise.all(allWeekPromises));
+  }
 
-    // Promise.all(allWeekPromises).then((responses) => {
-    //   const allResponsesPromises: Promise<NFLData>[] = [];
-    //   for (const response of responses) {
-    //     allResponsesPromises.push(response.json());
-    //   }
+  public static getAllGamesArr(): Promise<Response>[] {
+    const allWeekPromises: Promise<Response>[] = [];
+    for (let week = 1; week <= 18; week++) {
+      const url = new URL(this.apiUrl);
+      for (const [key, value] of Object.entries(this.apiSearchParams)) {
+        url.searchParams.set(key, value);
+      }
 
-    //   Promise.all(allResponsesPromises).then((datas) => {
-    //     for (const data of datas) {
-    //       console.log(`Got Results ${data.results[0].round}`);
-    //       addGames(data.results);
-    //     }
-    //     console.log(Object.values(games).length);
+      url.searchParams.set("round", `Week ${week}`);
+      allWeekPromises.push(fetch(url.href));
+    }
 
-    //     //for (let i = 0; i < 3; i++) {
-    //     //  console.log('====================================================');
-    //     //  Object.values(games)[i].toString();
-    //     //}
-
-    //     //fs.writeFile(dbPath, JSON.stringify(Object.values(games)), () => {});
-    //   });
-    // });
+    return allWeekPromises;
   }
 }
 

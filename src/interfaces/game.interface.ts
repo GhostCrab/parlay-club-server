@@ -116,7 +116,7 @@ export class Game implements IGame {
   }
 
   public getFav() {
-    let fav = this.data.team2Initials;
+    let fav = this.data.team1Initials;
     if (this.data.odds[0] && this.data.odds[0].spread < 0)
       fav = this.data.team2Initials;
 
