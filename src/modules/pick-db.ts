@@ -37,8 +37,6 @@ class PickDB {
   }
 
   public ingest(pickData: PickSetUpdate): PickSetUpdate {
-    const gamesThisWeek: IGame[] = [];
-
     PickDB.picks = PickDB.picks.filter( pick => !(pick.user.data.id === pickData.userID && pick.game.getWeek() === pickData.week) );
 
     for (const data of pickData.picks) {

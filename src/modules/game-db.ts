@@ -88,6 +88,10 @@ class GameDB {
   public allGames(): IGame[] {
     return GameDB.games;
   }
+
+  public writeDB(): void {
+    fs.writeFile(this.dbPath, JSON.stringify(GameDB.games.map(game => game.data)), () => {});
+  }
 }
 
 export default GameDB;

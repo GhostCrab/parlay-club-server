@@ -8,8 +8,9 @@ import GameDB from "./modules/game-db";
 import NFLAPI from "./modules/nfl-api";
 import PickDB, { PickSetUpdate } from "./modules/pick-db";
 import TeamDB from "./modules/team-db";
-import { PickData } from "./interfaces/pick.interface";
+import { Pick, PickData } from "./interfaces/pick.interface";
 import { ServerData } from "./controllers/posts";
+import UserDB from "./modules/user-db";
 
 const router: Express = express();
 
@@ -60,9 +61,18 @@ httpServer.listen(PORT, () =>
 
 io.on("connection", (socket) => {
   socket.on("pick-update", (msg) => {
+    const udb = UserDB.getInstance();
+    const pdb = PickDB.getInstance();
+    const tdb = TeamDB.getInstance();
+
     const data: PickSetUpdate = JSON.parse(msg);
 
-    const pdb = PickDB.getInstance();
+    console.log(`Updating picks for ${udb.fromID(data.userID).data.name} Week ${data.week}:`);
+    for (const pickData of data.picks) {
+      const pick = new Pick(pickData);
+      console.log(`  ${pick.game.toString()}: ${pick.team.data.abbr}`);
+    }
+
     pdb.ingest(data);
 
     io.emit("pick-update", msg);
