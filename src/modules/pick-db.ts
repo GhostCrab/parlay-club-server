@@ -55,7 +55,9 @@ class PickDB {
   }
 
   public writeDB(): void {
-    fs.writeFile(this.dbPath, JSON.stringify(PickDB.picks.map(pick => pick.data)), () => {});
+    fs.writeFile(this.dbPath, JSON.stringify(PickDB.picks.map(pick => pick.data)), (err) => {
+      if (err) console.error(`Failed to write to ${this.dbPath}: ${err}`);
+    });
   }
 }
 

@@ -90,7 +90,9 @@ class GameDB {
   }
 
   public writeDB(): void {
-    fs.writeFile(this.dbPath, JSON.stringify(GameDB.games.map(game => game.data)), () => {});
+    fs.writeFile(this.dbPath, JSON.stringify(GameDB.games.map(game => game.data)), (err) => {
+      if (err) console.error(`Failed to write to ${this.dbPath}: ${err}`);
+    });
   }
 }
 

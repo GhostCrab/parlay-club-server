@@ -75,9 +75,24 @@ io.on("connection", (socket) => {
 
     pdb.ingest(data);
 
-    io.emit("pick-update", msg);
+    pdb.writeDB();
+
+    emit('pick-update', {pickUpdate: data});
   });
 });
+
+interface WSMessage {
+  msgId?: number;
+  heartbeat?: string;
+  pickUpdate?: PickSetUpdate;
+  data?: ServerData;
+}
+
+export let msgId = 0;
+function emit(topic: string, msg: WSMessage): void {
+  msg.msgId = ++msgId;
+  io.emit(topic, JSON.stringify(msg));
+}
 
 async function main(): Promise<void> {
   const gdb = GameDB.getInstance();
@@ -197,13 +212,19 @@ async function main(): Promise<void> {
         const updatedGames = gdb.ingest(data.results);
 
         if (updatedGames.length) {
+          gdb.writeDB();
+
           const message: ServerData = {games: updatedGames.map(game => game.data)}
-          io.emit('message', JSON.stringify(message));
+          emit('game-update', {data: message});
         }
       }).catch((e) => {
         console.error(`ERROR : Failed nfl api fetch: ${e}`);
       })
     }
+  }, 10000);
+
+  setInterval(() => {
+    emit('heartbeat', {heartbeat: 'alive'});
   }, 10000);
 }
 

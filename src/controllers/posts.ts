@@ -7,6 +7,7 @@ import GameDB from "../modules/game-db";
 import PickDB from "../modules/pick-db";
 import TeamDB from "../modules/team-db";
 import UserDB from "../modules/user-db";
+import { msgId } from "../server";
 
 export interface ServerData {
   users?: UserData[],
@@ -14,13 +15,6 @@ export interface ServerData {
   games?: GameData[],
   picks?: PickData[]  
 }
-
-// getting all posts
-const getPosts = async (req: Request, res: Response, next: NextFunction) => {
-  return res.set('Access-Control-Allow-Origin', '*').status(200).json({
-    message: "NEW MESSAGE",
-  });
-};
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
   const data: ServerData = {
@@ -30,8 +24,8 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     picks: PickDB.getInstance().allPicks().map(pick => pick.data)
   }
 
-  return res.status(200).json(data);
+  return res.status(200).json({msgId: msgId, data: data});
 };
 
 
-export default { getPosts, getAll };
+export default { getAll };

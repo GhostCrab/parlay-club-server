@@ -3,7 +3,6 @@ import controller from "../controllers/posts";
 import path from "path";
 const router = express.Router();
 
-router.get("/posts", controller.getPosts);
 router.get("/getAll", controller.getAll);
 
 router.get("/", (req, res) => {
