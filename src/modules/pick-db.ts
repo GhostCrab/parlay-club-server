@@ -14,7 +14,7 @@ class PickDB {
   private static db: PickDB;
   private dbPath = path.resolve(path.join(__dirname, '../../db/picks'));
 
-  private static picks: IPick[] = [];
+  private picks: IPick[] = [];
 
   public static init() {
     PickDB.db = new PickDB();
@@ -24,7 +24,7 @@ class PickDB {
     const dbBuffer = fs.readFileSync(db.dbPath);
     const dbData: PickData[] = JSON.parse(dbBuffer.toString());
     for (const result of dbData) {
-      PickDB.picks.push(new Pick(result));
+      PickDB.db.addPick(result);
     }
   }
 
@@ -36,26 +36,30 @@ class PickDB {
     return PickDB.db;
   }
 
+  public clear(): void {
+    this.picks = [];
+  }
+
   public ingest(pickData: PickSetUpdate): PickSetUpdate {
-    PickDB.picks = PickDB.picks.filter( pick => !(pick.user.data.id === pickData.userID && pick.game.getWeek() === pickData.week) );
+    this.picks = this.picks.filter( pick => !(pick.user.data.id === pickData.userID && pick.game.getWeek() === pickData.week) );
 
     for (const data of pickData.picks) {
-      PickDB.picks.push(new Pick(data));
+      this.picks.push(new Pick(data));
     }
 
     return pickData;
   }
   
   public allPicks(): IPick[] {
-    return PickDB.picks;
+    return this.picks;
   }
 
   public addPick(data: PickData) {
-    PickDB.picks.push(new Pick(data));
+    this.picks.push(new Pick(data));
   }
 
   public writeDB(): void {
-    fs.writeFile(this.dbPath, JSON.stringify(PickDB.picks.map(pick => pick.data)), (err) => {
+    fs.writeFile(this.dbPath, JSON.stringify(this.picks.map(pick => pick.data)), (err) => {
       if (err) console.error(`Failed to write to ${this.dbPath}: ${err}`);
     });
   }
