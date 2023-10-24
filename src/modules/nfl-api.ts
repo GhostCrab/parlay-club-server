@@ -1,11 +1,11 @@
 import { Observable, from } from "rxjs";
-import { NFLData } from "../interfaces/nfl-api.interface";
 
 class NFLAPI {
-  private static apiUrl = "https://metabet.static.api.areyouwatchingthis.com/api/odds.json";
+  private static apiUrl = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard";
   private static apiSearchParams = {
-    apiKey: "219f64094f67ed781035f5f7a08840fc",
-    leagueCode: "FBP",
+    limit: '1000',
+    dates:  '2023',
+    seasontype: '2',
   };
 
   public static getAllGames(): Observable<Response[]> {
@@ -16,7 +16,7 @@ class NFLAPI {
         url.searchParams.set(key, value);
       }
 
-      url.searchParams.set("round", `Week ${week}`);
+      url.searchParams.set("week", week.toString());
       allWeekPromises.push(fetch(url.href));
     }
 

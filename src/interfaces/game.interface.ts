@@ -1,4 +1,5 @@
 import { fmt, postfmt } from "../modules/utility";
+import { NFLAPIEvent } from "./nfl-api.interface";
 
 declare global { 
   interface Date { 
@@ -28,72 +29,27 @@ export enum WEEKDAY {
   sunmon,
 }
 
-export interface GameOdds {
-  date: number;
-  moneyLine1: number;
-  moneyLine2: number;
-  overUnder: number;
-  overUnderLineOver: number;
-  overUnderLineUnder: number;
-  provider: string;
-  spread: number;
-  spreadLine1: number;
-  spreadLine2: number;
-}
-
-export interface GameData {
-  date: number;
-  gameID: number;
-  headline: string;
-  highPoints: number;
-  leagueCode: string;
-  location: string;
-  odds: GameOdds[];
-  points: number;
-  pointsLevel: string;
-  rationale?: string;
-  round: string;
-  sport: string;
-  team1City: string;
-  team1Color: string;
-  team1ID: number;
-  team1Initials: string;
-  team1Name: string;
-  team1Score?: number;
-  team2City: string;
-  team2Color: string;
-  team2ID: number;
-  team2Initials: string;
-  team2Name: string;
-  team2Score?: number;
-  time?: number;
-  timeLeft?: string;
-}
-
 export interface IGame {
-  data: GameData;
+  data: NFLAPIEvent;
   date: Date;
   oddsCutoffDate: Date;
   revealDate: Date;
 
-  update(data: GameData): boolean;
+  update(data: NFLAPIEvent): boolean;
   updateOdds(spread: number, ou: number): void;
   isComplete(): boolean;
-  getData(): GameData;
   getWeek(): number;
   toString(): void;
   toString(showWeek: boolean): void;
 }
 
 export class Game implements IGame {
-  data: GameData;
+  data: NFLAPIEvent;
   date: Date;
   oddsCutoffDate: Date;
   revealDate: Date;
 
-  constructor(data: GameData) {
-    this.data = fixOdds(data);
-
+  constructor(data: NFLAPIEvent) {
     this.updateDates();
   }
 
@@ -130,12 +86,12 @@ export class Game implements IGame {
   }
 
   public getWeek() {
-    return Number(this.data.round.split(' ')[1]);
+    return this.data.week.number;
   }
 
   public getFav() {
     let fav = this.data.team1Initials;
-    if (this.data.odds[0] && this.data.odds[0].spread < 0)
+    if (this.data.competitions?[0]. && this.data.odds[0].spread < 0)
       fav = this.data.team2Initials;
 
     return fav;

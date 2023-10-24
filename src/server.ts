@@ -3,7 +3,7 @@ import express, { Express, response } from "express";
 import morgan from "morgan";
 import routes from "./routes/posts";
 import Websocket from "./modules/websocket";
-import { NFLData } from "./interfaces/nfl-api.interface";
+import { ScoreboardData } from "./interfaces/nfl-api.interface";
 import GameDB from "./modules/game-db";
 import NFLAPI from "./modules/nfl-api";
 import PickDB, { PickSetUpdate } from "./modules/pick-db";
@@ -374,8 +374,8 @@ async function main(): Promise<void> {
     for (const promise of NFLAPI.getAllGamesArr()) {
       promise.then((result) => {
         return result.json();
-      }).then((data) => {
-        const updatedGames = gdb.ingest(data.results.map((result: GameData) => fixID(result)));
+      }).then((data: ScoreboardData) => {
+        const updatedGames = gdb.ingest(data.events);
 
         if (updatedGames.length) {
           gdb.writeDB();
