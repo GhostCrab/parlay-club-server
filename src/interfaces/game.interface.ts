@@ -488,3 +488,15 @@ function fixOdds(data: GameData): GameData {
 
   return data;
 }
+
+export function fixID(data: GameData): GameData {
+  const week = Number(data.round.split(' ')[1]);
+  let gameIDstr = '';
+  if (week < 10)
+    gameIDstr = `${data.team1ID}${data.team2ID}0${week}`;
+  else
+    gameIDstr = `${data.team1ID}${data.team2ID}${week}`;
+
+  data.gameID = Number(gameIDstr);
+  return data;
+}

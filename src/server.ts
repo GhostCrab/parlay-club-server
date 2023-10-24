@@ -11,6 +11,7 @@ import TeamDB from "./modules/team-db";
 import { Pick, PickData } from "./interfaces/pick.interface";
 import { ServerData } from "./controllers/posts";
 import UserDB from "./modules/user-db";
+import { GameData, fixID } from "./interfaces/game.interface";
 
 const router: Express = express();
 
@@ -125,8 +126,6 @@ async function main(): Promise<void> {
     {user: 6, game: gdb.fromWeekTeam(7, 'NO').data.gameID, team: tdb.fromAbbr('JAC').data.id},
     {user: 6, game: gdb.fromWeekTeam(7, 'NE').data.gameID, team: tdb.fromAbbr('BUF').data.id},
     {user: 6, game: gdb.fromWeekTeam(7, 'BAL').data.gameID, team: tdb.fromAbbr('DET').data.id},
-    {user: 6, game: gdb.fromWeekTeam(7, 'CHI').data.gameID, team: tdb.fromAbbr('CHI').data.id},
-    {user: 6, game: gdb.fromWeekTeam(7, 'DEN').data.gameID, team: tdb.fromAbbr('GB').data.id},
     {user: 6, game: gdb.fromWeekTeam(7, 'PHI').data.gameID, team: tdb.fromAbbr('MIA').data.id},
     {user: 5, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('KC').data.id},
     {user: 5, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('OVR').data.id},
@@ -144,6 +143,9 @@ async function main(): Promise<void> {
     {user: 5, game: gdb.fromWeekTeam(6, 'LV').data.gameID, team: tdb.fromAbbr('LV').data.id},
     {user: 5, game: gdb.fromWeekTeam(6, 'LAR').data.gameID, team: tdb.fromAbbr('LAR').data.id},
     {user: 5, game: gdb.fromWeekTeam(6, 'TB').data.gameID, team: tdb.fromAbbr('DET').data.id},
+    {user: 5, game: gdb.fromWeekTeam(7, 'NYG').data.gameID, team: tdb.fromAbbr('NYG').data.id},
+    {user: 5, game: gdb.fromWeekTeam(7, 'TB').data.gameID, team: tdb.fromAbbr('OVR').data.id},
+    {user: 5, game: gdb.fromWeekTeam(7, 'LAR').data.gameID, team: tdb.fromAbbr('LAR').data.id},
     {user: 4, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('KC').data.id},
     {user: 4, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('UND').data.id},
     {user: 4, game: gdb.fromWeekTeam(1, 'BAL').data.gameID, team: tdb.fromAbbr('HOU').data.id},
@@ -159,6 +161,8 @@ async function main(): Promise<void> {
     {user: 4, game: gdb.fromWeekTeam(6, 'CIN').data.gameID, team: tdb.fromAbbr('SEA').data.id},
     {user: 4, game: gdb.fromWeekTeam(6, 'NYJ').data.gameID, team: tdb.fromAbbr('NYJ').data.id},
     {user: 4, game: gdb.fromWeekTeam(7, 'NO').data.gameID, team: tdb.fromAbbr('JAC').data.id},
+    {user: 4, game: gdb.fromWeekTeam(7, 'BAL').data.gameID, team: tdb.fromAbbr('BAL').data.id},
+    {user: 4, game: gdb.fromWeekTeam(7, 'MIN').data.gameID, team: tdb.fromAbbr('SF').data.id},
     {user: 3, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('KC').data.id},
     {user: 3, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('OVR').data.id},
     {user: 3, game: gdb.fromWeekTeam(1, 'IND').data.gameID, team: tdb.fromAbbr('IND').data.id},
@@ -215,6 +219,8 @@ async function main(): Promise<void> {
     {user: 1, game: gdb.fromWeekTeam(5, 'NE').data.gameID, team: tdb.fromAbbr('UND').data.id},
     {user: 1, game: gdb.fromWeekTeam(6, 'CIN').data.gameID, team: tdb.fromAbbr('CIN').data.id},
     {user: 1, game: gdb.fromWeekTeam(6, 'CHI').data.gameID, team: tdb.fromAbbr('OVR').data.id},
+    {user: 1, game: gdb.fromWeekTeam(7, 'IND').data.gameID, team: tdb.fromAbbr('UND').data.id},
+    {user: 1, game: gdb.fromWeekTeam(7, 'NYG').data.gameID, team: tdb.fromAbbr('WAS').data.id},
     {user: 0, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('DET').data.id},
     {user: 0, game: gdb.fromWeekTeam(1, 'KC').data.gameID, team: tdb.fromAbbr('UND').data.id},
     {user: 0, game: gdb.fromWeekTeam(1, 'PIT').data.gameID, team: tdb.fromAbbr('PIT').data.id},
@@ -231,7 +237,9 @@ async function main(): Promise<void> {
     {user: 0, game: gdb.fromWeekTeam(5, 'MIN').data.gameID, team: tdb.fromAbbr('KC').data.id},
     {user: 0, game: gdb.fromWeekTeam(6, 'KC').data.gameID, team: tdb.fromAbbr('KC').data.id},
     {user: 0, game: gdb.fromWeekTeam(6, 'CHI').data.gameID, team: tdb.fromAbbr('MIN').data.id},
-    {user: 0, game: gdb.fromWeekTeam(6, 'LAC').data.gameID, team: tdb.fromAbbr('DAL').data.id}
+    {user: 0, game: gdb.fromWeekTeam(6, 'LAC').data.gameID, team: tdb.fromAbbr('DAL').data.id},
+    {user: 0, game: gdb.fromWeekTeam(7, 'NE').data.gameID, team: tdb.fromAbbr('BUF').data.id},
+    {user: 0, game: gdb.fromWeekTeam(7, 'MIN').data.gameID, team: tdb.fromAbbr('MIN').data.id}
   ];
 
   pdb.clear();
@@ -367,7 +375,7 @@ async function main(): Promise<void> {
       promise.then((result) => {
         return result.json();
       }).then((data) => {
-        const updatedGames = gdb.ingest(data.results);
+        const updatedGames = gdb.ingest(data.results.map((result: GameData) => fixID(result)));
 
         if (updatedGames.length) {
           gdb.writeDB();

@@ -23,14 +23,18 @@ class GameDB {
   }
 
   public static init() {
+    GameDB.games = [];
     GameDB.db = new GameDB();
     const db = GameDB.getInstance();
 
     console.log(`Game Database Path: ${db.dbPath}`);
     const dbBuffer = fs.readFileSync(db.dbPath);
-    const dbResults: GameData[] = JSON.parse(dbBuffer.toString());
-    for (const result of dbResults) {
-      db.addGame(result);
+    if (dbBuffer.toString() !== '') {
+      const dbResults: GameData[] = JSON.parse(dbBuffer.toString());
+      for (const result of dbResults) {
+        const game = db.addGame(result);
+        if (game.getWeek() === 7 && game.getData().team1Initials === 'CLE') console.log(game);
+      }
     }
   }
 
@@ -40,6 +44,13 @@ class GameDB {
     }
 
     return GameDB.db;
+  }
+
+  public clear(): void {
+    GameDB.games = [];
+    this.gamesByID = {};
+    this.gamesByWeekTeam = {};
+    this.gamesByWeek = {};
   }
 
   private addGame(result: GameData): IGame {
