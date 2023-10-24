@@ -1,5 +1,5 @@
 import { fmt, postfmt } from "../modules/utility";
-import { NFLAPIEvent } from "./nfl-api.interface";
+import { NFLAPICompetition, NFLAPIEvent, Odds } from "./nfl-api.interface";
 
 declare global { 
   interface Date { 
@@ -34,6 +34,8 @@ export interface IGame {
   date: Date;
   oddsCutoffDate: Date;
   revealDate: Date;
+  competition: NFLAPICompetition;
+  odds: Odds;
 
   update(data: NFLAPIEvent): boolean;
   updateOdds(spread: number, ou: number): void;
@@ -48,8 +50,22 @@ export class Game implements IGame {
   date: Date;
   oddsCutoffDate: Date;
   revealDate: Date;
+  competition: NFLAPICompetition;
+  odds: Odds;
 
   constructor(data: NFLAPIEvent) {
+    this.data = data;
+    if (!data.competitions) throw new Error("Attempted to create a game with no data.competitions");
+
+    this.competition = data.competitions[0];
+    if (this.competition.odds)
+      this.odds = this.competition.odds[0];
+    else
+      this.odds = {
+        details: `${this.competition.competitors[0].team.abbreviation} -0`,
+        overUnder: 0
+      }
+    
     this.updateDates();
   }
 
@@ -90,8 +106,8 @@ export class Game implements IGame {
   }
 
   public getFav() {
-    let fav = this.data.team1Initials;
-    if (this.data.competitions?[0]. && this.data.odds[0].spread < 0)
+    let fav = this.odds.details;
+    if (this.data.competitions[0].odds[0] && this.data.odds[0].spread < 0)
       fav = this.data.team2Initials;
 
     return fav;

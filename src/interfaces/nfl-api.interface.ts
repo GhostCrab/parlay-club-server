@@ -91,15 +91,9 @@ export interface Regulation {
 }
 
 export interface Odds {
-  provider:  Provider;
+  // provider:  Provider;
   details:   string;
   overUnder: number;
-}
-
-export interface Provider {
-  id:       string;
-  name:     string;
-  priority: number;
 }
 
 export interface Status {
