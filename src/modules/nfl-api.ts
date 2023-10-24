@@ -31,7 +31,8 @@ class NFLAPI {
         url.searchParams.set(key, value);
       }
 
-      url.searchParams.set("round", `Week ${week}`);
+      url.searchParams.set("week", week.toString());
+      console.log(url.href);
       allWeekPromises.push(fetch(url.href));
     }
 

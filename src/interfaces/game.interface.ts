@@ -29,43 +29,44 @@ export enum WEEKDAY {
   sunmon,
 }
 
+export interface GameData {
+  id: number;
+  date: string;
+  week: number;
+  away: string;
+  home: string;
+  odds?: {
+    spread: number;
+    ou: number;
+  }
+  status?: {
+    awayScore: number;
+    homeScore: number;
+    timeLeft: string;
+  }
+}
+
 export interface IGame {
-  data: NFLAPIEvent;
+  data: GameData;
   date: Date;
   oddsCutoffDate: Date;
   revealDate: Date;
-  competition: NFLAPICompetition;
-  odds: Odds;
 
-  update(data: NFLAPIEvent): boolean;
+  update(data: GameData): boolean;
   updateOdds(spread: number, ou: number): void;
   isComplete(): boolean;
-  getWeek(): number;
   toString(): void;
   toString(showWeek: boolean): void;
 }
 
 export class Game implements IGame {
-  data: NFLAPIEvent;
+  data: GameData;
   date: Date;
   oddsCutoffDate: Date;
   revealDate: Date;
-  competition: NFLAPICompetition;
-  odds: Odds;
 
-  constructor(data: NFLAPIEvent) {
+  constructor(data: GameData) {
     this.data = data;
-    if (!data.competitions) throw new Error("Attempted to create a game with no data.competitions");
-
-    this.competition = data.competitions[0];
-    if (this.competition.odds)
-      this.odds = this.competition.odds[0];
-    else
-      this.odds = {
-        details: `${this.competition.competitors[0].team.abbreviation} -0`,
-        overUnder: 0
-      }
-    
     this.updateDates();
   }
 
@@ -102,65 +103,65 @@ export class Game implements IGame {
   }
 
   public getWeek() {
-    return this.data.week.number;
+    return this.data.week;
   }
 
   public getFav() {
-    let fav = this.odds.details;
-    if (this.data.competitions[0].odds[0] && this.data.odds[0].spread < 0)
-      fav = this.data.team2Initials;
+    let fav = this.data.away;
+    if (this.data.odds && this.data.odds.spread < 0)
+      fav = this.data.home;
 
     return fav;
   }
 
   public getSpread() {
     let spread = '-0';
-    if (this.data.odds[0] && this.data.odds[0].spread)
-      spread = `-${Math.abs(this.data.odds[0].spread).toString()}`
+    if (this.data.odds)
+      spread = `-${Math.abs(this.data.odds.spread).toString()}`
 
     return postfmt(spread, 5);
   }
 
   public getOU() {
     let ou = '+0';
-    if (this.data.odds[0] && this.data.odds[0].overUnder)
-      ou = `+${this.data.odds[0].overUnder.toString()}`
+    if (this.data.odds)
+      ou = `+${this.data.odds.ou.toString()}`
 
     return postfmt(ou, 5);
   }
 
   public getATSWinner() {
-    if (this.data.odds[0] && this.data.odds[0].spread && (this.isActive() || this.isComplete())) {
-      const modScore = this.homeScore() + this.data.odds[0].spread;
+    if (this.data.odds && (this.isActive() || this.isComplete())) {
+      const modScore = this.homeScore() + this.data.odds.spread;
       if (modScore > this.awayScore())
-        return this.data.team2Initials;
-      return this.data.team1Initials;
+        return this.data.home;
+      return this.data.away;
     }
 
     return 'PSH';
   }
 
   public getOUResult() {
-    if (this.data.odds[0] && this.data.odds[0].overUnder && (this.isActive() || this.isComplete())) {
+    if (this.data.odds && (this.isActive() || this.isComplete())) {
       const score = this.homeScore() + this.awayScore();
-      if (score > this.data.odds[0].overUnder) return 'OVR';
-      else if (score < this.data.odds[0].overUnder) return 'UND';
+      if (score > this.data.odds.ou) return 'OVR';
+      else if (score < this.data.odds.ou) return 'UND';
     }
 
     return 'PSH';
   }
 
   public homeScore(): number {
-    return (this.data.team2Score || 0);
+    return (this.data.status?.homeScore || 0);
   }
 
   public awayScore(): number {
-    return (this.data.team1Score || 0);
+    return (this.data.status?.awayScore || 0);
   }
 
   public toString(showWeek: boolean = false) {
-    let homeInit = fmt(this.data.team2Initials, 3);
-    let awayInit = fmt(this.data.team1Initials, 3);
+    let homeInit = fmt(this.data.home, 3);
+    let awayInit = fmt(this.data.away, 3);
     let week = fmt(this.getWeek().toString(), 2);
     let favInit = fmt(this.getFav(), 3);
     let weekStr = '';
@@ -169,7 +170,7 @@ export class Game implements IGame {
     if (this.isComplete() || this.isActive()) {
       let awayResult = `${awayInit} ${fmt(this.awayScore().toString(), 2)}`
       let homeResult = `${homeInit} ${fmt(this.homeScore().toString(), 2)}`
-      if (this.getATSWinner() === this.data.team2Initials) {
+      if (this.getATSWinner() === this.data.home) {
         awayResult = ` ${awayResult} `;
         homeResult = `[${homeResult}]`;
       } else {
@@ -183,79 +184,27 @@ export class Game implements IGame {
   }
 
   public isComplete(): boolean {
-    return this.data.timeLeft?.includes('Final') || false;
+    return this.data.status?.timeLeft.includes('Final') || false;
   }
 
   public isActive(): boolean {
-    return this.data.timeLeft !== undefined && !this.isComplete();
+    return this.data.status !== undefined && !this.isComplete();
   }
 
-  public update(data: GameData, onlyImportant = true): boolean {
-    data = fixOdds(data);
+  public update(data: GameData): boolean {
     let updated = false;
-    let important = false;
     const updates: string[] = [];
-    
-    // date: number;
+    /*
+    // date: string;
     if (this.data.date !== data.date) {
       updates.push(`date: ${this.data.date} => ${data.date}`);
 
       this.data.date = data.date;
       updated = true;
-      important = true;
     }
-    // gameID: number;
-    if (this.data.gameID !== data.gameID) {
+    // id: number;
+    if (this.data.id !== data.id) {
       throw new Error("Attempted to update a game when gameID does not match");
-    }
-    // headline: string;
-    if (this.data.headline !== data.headline) {
-      if (!onlyImportant) updates.push(`headline: ${this.data.headline} => ${data.headline}`);
-
-      this.data.headline = data.headline;
-      updated = true;
-    }
-    // highPoints: number;
-    if (this.data.highPoints !== data.highPoints) {
-      if (!onlyImportant) updates.push(`highPoints: ${this.data.highPoints} => ${data.highPoints}`);
-
-      this.data.highPoints = data.highPoints;
-      updated = true;
-    }
-    // leagueCode: string;
-    if (this.data.leagueCode !== data.leagueCode) {
-      if (!onlyImportant) updates.push(`leagueCode: ${this.data.leagueCode} => ${data.leagueCode}`);
-
-      this.data.leagueCode = data.leagueCode;
-      updated = true;
-    }
-    // location: string;
-    if (this.data.location !== data.location) {
-      if (!onlyImportant) updates.push(`location: ${this.data.location} => ${data.location}`);
-
-      this.data.location = data.location;
-      updated = true;
-    }
-    // points: number;
-    if (this.data.points !== data.points) {
-      if (!onlyImportant) updates.push(`points: ${this.data.points} => ${data.points}`);
-
-      this.data.points = data.points;
-      updated = true;
-    }
-    // pointsLevel: string;
-    if (this.data.pointsLevel !== data.pointsLevel) {
-      if (!onlyImportant) updates.push(`pointsLevel: ${this.data.pointsLevel} => ${data.pointsLevel}`);
-
-      this.data.pointsLevel = data.pointsLevel;
-      updated = true;
-    }
-    // rationale?: string;
-    if (this.data.rationale !== data.rationale) {
-      if (!onlyImportant) updates.push(`rationale: ${this.data.rationale} => ${data.rationale}`);
-
-      this.data.rationale = data.rationale;
-      updated = true;
     }
     // round: string;
     if (this.data.round !== data.round) {
@@ -430,45 +379,36 @@ export class Game implements IGame {
       for (const update of updates)
         console.log(`  ${update}`);
     }
-
-    if (onlyImportant) {
-      return important;
-    }
+    */
 
     return updated;
   }
 
   updateOdds(spread: number, ou: number): void {
-    if(this.data.odds.length === 1) {
-      const odds = this.data.odds[0];
+    this.data.odds = {
+      spread: spread,
+      ou: ou
+    };
+  }
+}
 
-      odds.spread = spread;
-      odds.overUnder = ou;
+export function fromNFLAIPEvent(data: NFLAPIEvent): GameData {
+  if (data.competitions && data.competitions.length > 0) {
+    const competition = data.competitions[0];
+
+    return {
+      id: Number(competition.id),
+      date: competition.date,
+      week: data.week.number,
+      away: competition.competitors[0].team.abbreviation,
+      home: competition.competitors[1].team.abbreviation,
+      status: {
+        awayScore: Number(competition.competitors[0].score),
+        homeScore: Number(competition.competitors[1].score),
+        timeLeft: competition.status.displayClock
+      }
     }
   }
-}
 
-function fixOdds(data: GameData): GameData {
-  data.odds = data.odds.filter((a) => a.provider === "CONSENSUS");
-  if (data.odds.length) {
-    data.odds[0].spread = Math.round(data.odds[0].spread * 2) / 2;
-    data.odds[0].overUnder = Math.round(data.odds[0].overUnder * 2) / 2;
-
-    if (isNaN(data.odds[0].spread)) data.odds[0].spread = 0;
-    if (isNaN(data.odds[0].overUnder)) data.odds[0].overUnder = 0;
-  }
-
-  return data;
-}
-
-export function fixID(data: GameData): GameData {
-  const week = Number(data.round.split(' ')[1]);
-  let gameIDstr = '';
-  if (week < 10)
-    gameIDstr = `${data.team1ID}${data.team2ID}0${week}`;
-  else
-    gameIDstr = `${data.team1ID}${data.team2ID}${week}`;
-
-  data.gameID = Number(gameIDstr);
-  return data;
+  throw new Error("Attempted to create a game with no data.competitions");
 }

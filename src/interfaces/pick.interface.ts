@@ -40,6 +40,6 @@ export class Pick implements Pick {
   }
 
   toString(): string {
-    return `WEEK ${this.game.getWeek()} ${this.user.data.name}: ${this.game.toString(false)} | ${this.team.data.abbr}`
+    return `WEEK ${this.game.data.week} ${this.user.data.name}: ${this.game.toString(false)} | ${this.team.data.abbr}`
   }
 }

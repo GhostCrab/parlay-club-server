@@ -6,7 +6,7 @@ class GameDB {
   private static db: GameDB;
   private dbPath = path.resolve(path.join(__dirname, '../../db/games'));
 
-  private static games: IGame[] = [];
+  private games: IGame[] = [];
   private gamesByID: Record<number, IGame>;
   private gamesByWeek: Record<number, IGame[]>;
   private gamesByWeekTeam: Record<number, Record<string, IGame>>;
@@ -23,17 +23,15 @@ class GameDB {
   }
 
   public static init() {
-    GameDB.games = [];
     GameDB.db = new GameDB();
     const db = GameDB.getInstance();
 
     console.log(`Game Database Path: ${db.dbPath}`);
     const dbBuffer = fs.readFileSync(db.dbPath);
-    if (dbBuffer.toString() !== '') {
+    if (dbBuffer.length) {
       const dbResults: GameData[] = JSON.parse(dbBuffer.toString());
       for (const result of dbResults) {
         const game = db.addGame(result);
-        if (game.getWeek() === 7 && game.getData().team1Initials === 'CLE') console.log(game);
       }
     }
   }
@@ -47,7 +45,7 @@ class GameDB {
   }
 
   public clear(): void {
-    GameDB.games = [];
+    this.games = [];
     this.gamesByID = {};
     this.gamesByWeekTeam = {};
     this.gamesByWeek = {};
@@ -55,12 +53,12 @@ class GameDB {
 
   private addGame(result: GameData): IGame {
     const game = new Game(result);
-    const week = game.getWeek();
-    GameDB.games.push(game);
-    this.gamesByID[result.gameID] = game;
+    const week = game.data.week;
+    this.games.push(game);
+    this.gamesByID[result.id] = game;
     this.gamesByWeek[week].push(game);
-    this.gamesByWeekTeam[week][game.data.team1Initials] = game;
-    this.gamesByWeekTeam[week][game.data.team2Initials] = game;
+    this.gamesByWeekTeam[week][game.data.away] = game;
+    this.gamesByWeekTeam[week][game.data.home] = game;
 
     return game;
   }
@@ -68,12 +66,12 @@ class GameDB {
   public ingest(results: GameData[]): IGame[] {
     const updatedGames: IGame[] = [];
     for (const result of results) {
-      if (!this.gamesByID[result.gameID]) {
+      if (!this.gamesByID[result.id]) {
         const newGame = this.addGame(result)
         updatedGames.push(newGame)
       } else {
-        if (this.gamesByID[result.gameID].update(result)) {
-          updatedGames.push(this.gamesByID[result.gameID]);
+        if (this.gamesByID[result.id].update(result)) {
+          updatedGames.push(this.gamesByID[result.id]);
         }
       }
     }
@@ -97,11 +95,11 @@ class GameDB {
   }
 
   public allGames(): IGame[] {
-    return GameDB.games;
+    return this.games;
   }
 
   public writeDB(): void {
-    fs.writeFile(this.dbPath, JSON.stringify(GameDB.games.map(game => game.data)), (err) => {
+    fs.writeFile(this.dbPath, JSON.stringify(this.games.map(game => game.data)), (err) => {
       if (err) console.error(`Failed to write to ${this.dbPath}: ${err}`);
     });
   }

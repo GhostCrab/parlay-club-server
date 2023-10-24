@@ -2,7 +2,6 @@ import { IPick, Pick, PickData } from "../interfaces/pick.interface";
 
 import fs from "fs";
 import path from "path";
-import { IGame } from "../interfaces/game.interface";
 
 export interface PickSetUpdate {
   userID: number,
@@ -22,9 +21,11 @@ class PickDB {
 
     console.log(`Pick Database Path: ${db.dbPath}`);
     const dbBuffer = fs.readFileSync(db.dbPath);
-    const dbData: PickData[] = JSON.parse(dbBuffer.toString());
-    for (const result of dbData) {
-      PickDB.db.addPick(result);
+    if (dbBuffer.length) {
+      const dbData: PickData[] = JSON.parse(dbBuffer.toString());
+      for (const result of dbData) {
+        PickDB.db.addPick(result);
+      }
     }
   }
 
@@ -41,7 +42,7 @@ class PickDB {
   }
 
   public ingest(pickData: PickSetUpdate): PickSetUpdate {
-    this.picks = this.picks.filter( pick => !(pick.user.data.id === pickData.userID && pick.game.getWeek() === pickData.week) );
+    this.picks = this.picks.filter( pick => !(pick.user.data.id === pickData.userID && pick.game.data.week === pickData.week) );
 
     for (const data of pickData.picks) {
       this.picks.push(new Pick(data));
