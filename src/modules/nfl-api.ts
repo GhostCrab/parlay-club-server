@@ -32,7 +32,6 @@ class NFLAPI {
       }
 
       url.searchParams.set("week", week.toString());
-      console.log(url.href);
       allWeekPromises.push(fetch(url.href));
     }
 

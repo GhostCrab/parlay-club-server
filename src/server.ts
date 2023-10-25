@@ -11,7 +11,7 @@ import TeamDB from "./modules/team-db";
 import { Pick, PickData } from "./interfaces/pick.interface";
 import { ServerData } from "./controllers/posts";
 import UserDB from "./modules/user-db";
-import { fromNFLAIPEvent } from "./interfaces/game.interface";
+import { Game, fromNFLAIPEvent } from "./interfaces/game.interface";
 
 const router: Express = express();
 
@@ -370,28 +370,50 @@ async function main(): Promise<void> {
   // gdb.fromWeekTeam(8, 'LAC').updateOdds(-6, 0);
   // gdb.fromWeekTeam(8, 'DET').updateOdds(-5, 0);
 
-  setInterval(() => {
-    for (const promise of NFLAPI.getAllGamesArr()) {
-      promise.then((result) => {
-        return result.json();
-      }).then((data: ScoreboardData) => {
-        const updatedGames = gdb.ingest(data.events.map(data => fromNFLAIPEvent(data)));
+  // setInterval(() => {
+  //   for (const promise of NFLAPI.getAllGamesArr()) {
+  //     promise.then((result) => {
+  //       return result.json();
+  //     }).then((data: ScoreboardData) => {
+  //       const updatedGames = gdb.ingest(data.events.map(data => fromNFLAIPEvent(data)));
 
-        if (updatedGames.length) {
-          gdb.writeDB();
+  //       if (updatedGames.length) {
+  //         gdb.writeDB();
 
-          const message: ServerData = {games: updatedGames.map(game => game.data)}
-          emit('game-update', {data: message});
-        }
-      }).catch((e) => {
-        console.error(`ERROR : Failed nfl api fetch: ${e}`);
-      })
-    }
-  }, 10000);
+  //         const message: ServerData = {games: updatedGames.map(game => game.data)}
+  //         emit('game-update', {data: message});
+  //       }
+  //     }).catch((e) => {
+  //       console.error(`ERROR : Failed nfl api fetch: ${e}`);
+  //     })
+  //   }
+  // }, 10000);
 
-  setInterval(() => {
-    emit('heartbeat', {heartbeat: 'alive'});
-  }, 10000);
+  // setInterval(() => {
+  //   emit('heartbeat', {heartbeat: 'alive'});
+  // }, 10000);
+
+
+    NFLAPI.getAllGamesArr()[0].then((result) => {
+      return result.json();
+    }).then((data: ScoreboardData) => {
+      const updatedGames = gdb.ingest(data.events.map(data => fromNFLAIPEvent(data)));
+
+      for (const gameData of data.events.map(x => fromNFLAIPEvent(x))) {
+        const game = new Game(gameData);
+        console.log(game.toString());
+        console.log(game);
+      }
+
+      // if (updatedGames.length) {
+      //   gdb.writeDB();
+
+      //   const message: ServerData = {games: updatedGames.map(game => game.data)}
+      //   emit('game-update', {data: message});
+      // }
+    }).catch((e) => {
+      console.error(`ERROR : Failed nfl api fetch: ${e}`);
+    })
 }
 
 main().catch(console.error);
