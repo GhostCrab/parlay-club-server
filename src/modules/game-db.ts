@@ -30,9 +30,7 @@ class GameDB {
     const dbBuffer = fs.readFileSync(db.dbPath);
     if (dbBuffer.length) {
       const dbResults: GameData[] = JSON.parse(dbBuffer.toString());
-      for (const result of dbResults) {
-        const game = db.addGame(result);
-      }
+      db.ingest(dbResults);
     }
   }
 

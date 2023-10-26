@@ -29,12 +29,30 @@ export enum WEEKDAY {
   sunmon,
 }
 
+/*
+  Gamestate dictates how often the game is polled for updates.
+  PRE - Game State & Odds are polled every 8 hours, queued
+  CURRENT - Game Odds are polled every 15 minutes, queued
+  LOCKED - Game State is polled hourly, queued
+  ACTIVE - Game State is polled every 10 seconds, instant
+  COMPLETE - Game State is polled once a day (shouldnt change), queued
+*/
+
+export enum GameState {
+  PRE = 0,      // Game happening after this week
+  CURRENT,      // Game happening this week
+  LOCKED,       // Odds are locked for this game
+  ACTIVE,       // Game is in progress
+  COMPLETE      // Game is complete
+}
+
 export interface GameData {
   id: number;
   date: string;
   week: number;
   away: string;
   home: string;
+  state: GameState;
   odds?: {
     spread: number;
     ou: number;
@@ -54,7 +72,6 @@ export interface IGame {
 
   update(data: GameData): boolean;
   updateOdds(spread: number, ou: number): void;
-  isComplete(): boolean;
   toString(): void;
   toString(showWeek: boolean): void;
 }
@@ -96,6 +113,8 @@ export class Game implements IGame {
       this.revealDate.setUTCHours(17 + dstOffset, 0, 0, 0);
     if (weekDay === WEEKDAY.thu || this.revealDate.getTime() > this.date.getTime())
       this.revealDate = new Date(this.data.date);
+
+    this.updateState();
   }
 
   public getData() {
@@ -131,7 +150,7 @@ export class Game implements IGame {
   }
 
   public getATSWinner() {
-    if (this.data.odds && (this.isActive() || this.isComplete())) {
+    if (this.data.odds && this.data.state >= GameState.ACTIVE) {
       const modScore = this.homeScore() + this.data.odds.spread;
       if (modScore > this.awayScore())
         return this.data.home;
@@ -142,7 +161,7 @@ export class Game implements IGame {
   }
 
   public getOUResult() {
-    if (this.data.odds && (this.isActive() || this.isComplete())) {
+    if (this.data.odds && this.data.state >= GameState.ACTIVE) {
       const score = this.homeScore() + this.awayScore();
       if (score > this.data.odds.ou) return 'OVR';
       else if (score < this.data.odds.ou) return 'UND';
@@ -167,7 +186,7 @@ export class Game implements IGame {
     let weekStr = '';
     if (showWeek) weekStr = `WEEK ${fmt(this.getWeek().toString(), 2)} `;
     
-    if (this.isComplete() || this.isActive()) {
+    if (this.data.state >= GameState.ACTIVE) {
       let awayResult = `${awayInit} ${fmt(this.awayScore().toString(), 2)}`
       let homeResult = `${homeInit} ${fmt(this.homeScore().toString(), 2)}`
       if (this.getATSWinner() === this.data.home) {
@@ -181,14 +200,6 @@ export class Game implements IGame {
     }
     
     return `${weekStr}${awayInit} @ ${homeInit}: ${favInit} ${this.getSpread()} ${this.getOU()}`
-  }
-
-  public isComplete(): boolean {
-    return this.data.status?.timeLeft.includes('Final') || false;
-  }
-
-  public isActive(): boolean {
-    return this.data.status !== undefined && !this.isComplete();
   }
 
   public update(data: GameData): boolean {
@@ -385,16 +396,40 @@ export class Game implements IGame {
   }
 
   updateOdds(spread: number, ou: number): void {
+    if (this.data.state >= GameState.LOCKED)
     this.data.odds = {
       spread: spread,
       ou: ou
     };
+  }
+
+  getState() {
+    this.updateState();
+    return this.data.state;
+  }
+
+  updateState() {
+    if (this.data.state === GameState.PRE) {
+      if (Date.now() >= this.oddsCutoffDate.getTime()) {
+        this.data.state = GameState.LOCKED;
+      }
+    }
+
+    if (this.data.state <= GameState.LOCKED) {
+      if (Date.now() >= this.date.getTime()) {
+        this.data.state = GameState.ACTIVE;
+      }
+    }
   }
 }
 
 export function fromNFLAIPEvent(data: NFLAPIEvent): GameData {
   if (data.competitions && data.competitions.length > 0) {
     const competition = data.competitions[0];
+    let state = GameState.PRE;
+
+    if (competition.status.type.name === 'STATUS_FINAL')
+      state = GameState.COMPLETE;
 
     return {
       id: Number(competition.id),
@@ -402,6 +437,7 @@ export function fromNFLAIPEvent(data: NFLAPIEvent): GameData {
       week: data.week.number,
       away: competition.competitors[0].team.abbreviation,
       home: competition.competitors[1].team.abbreviation,
+      state: state,
       status: {
         awayScore: Number(competition.competitors[0].score),
         homeScore: Number(competition.competitors[1].score),

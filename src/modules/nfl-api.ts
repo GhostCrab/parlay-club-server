@@ -8,19 +8,13 @@ class NFLAPI {
     seasontype: '2',
   };
 
-  public static getAllGames(): Observable<Response[]> {
-    const allWeekPromises: Promise<Response>[] = [];
-    for (let week = 1; week <= 18; week++) {
-      const url = new URL(this.apiUrl);
-      for (const [key, value] of Object.entries(this.apiSearchParams)) {
-        url.searchParams.set(key, value);
-      }
-
-      url.searchParams.set("week", week.toString());
-      allWeekPromises.push(fetch(url.href));
+  public static getAllGames(): Promise<Response> {
+    const url = new URL(this.apiUrl);
+    for (const [key, value] of Object.entries(this.apiSearchParams)) {
+      url.searchParams.set(key, value);
     }
-
-    return from(Promise.all(allWeekPromises));
+    console.log(url.href);
+    return fetch(url.href);
   }
 
   public static getAllGamesArr(): Promise<Response>[] {

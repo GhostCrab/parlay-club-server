@@ -394,15 +394,13 @@ async function main(): Promise<void> {
   // }, 10000);
 
 
-    NFLAPI.getAllGamesArr()[0].then((result) => {
+    NFLAPI.getAllGames().then((result) => {
       return result.json();
     }).then((data: ScoreboardData) => {
       const updatedGames = gdb.ingest(data.events.map(data => fromNFLAIPEvent(data)));
 
-      for (const gameData of data.events.map(x => fromNFLAIPEvent(x))) {
-        const game = new Game(gameData);
+      for (const game of gdb.allGames()) {
         console.log(game.toString());
-        console.log(game);
       }
 
       // if (updatedGames.length) {
