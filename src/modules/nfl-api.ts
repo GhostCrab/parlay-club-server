@@ -1,4 +1,5 @@
 import { Observable, from } from "rxjs";
+import { IGame } from "../interfaces/game.interface";
 
 class NFLAPI {
   private static apiUrl = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard";
@@ -13,7 +14,16 @@ class NFLAPI {
     for (const [key, value] of Object.entries(this.apiSearchParams)) {
       url.searchParams.set(key, value);
     }
-    console.log(url.href);
+    return fetch(url.href);
+  }
+
+  public static getGamesForWeek(week: number): Promise<Response> {
+    const url = new URL(this.apiUrl);
+    for (const [key, value] of Object.entries(this.apiSearchParams)) {
+      url.searchParams.set(key, value);
+    }
+    url.searchParams.set("week", week.toString());
+    
     return fetch(url.href);
   }
 
@@ -30,6 +40,11 @@ class NFLAPI {
     }
 
     return allWeekPromises;
+  }
+
+  public static getOdds(game: IGame): Promise<Response> {
+    const url = new URL(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${game.data.id}/competitions/${game.data.id}/odds`);
+    return fetch(url.href);
   }
 }
 

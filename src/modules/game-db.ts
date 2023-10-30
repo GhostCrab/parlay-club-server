@@ -1,9 +1,10 @@
-import { Game, GameData, IGame } from "../interfaces/game.interface";
+import { Game, GameData, GameState, IGame } from "../interfaces/game.interface";
 import fs from "fs";
 import path from "path";
 
 class GameDB {
   private static db: GameDB;
+  private static currentWeek: number = 0;
   private dbPath = path.resolve(path.join(__dirname, '../../db/games'));
 
   private games: IGame[] = [];
@@ -100,6 +101,23 @@ class GameDB {
     fs.writeFile(this.dbPath, JSON.stringify(this.games.map(game => game.data)), (err) => {
       if (err) console.error(`Failed to write to ${this.dbPath}: ${err}`);
     });
+  }
+
+  static getCurrentWeek(force: boolean = false): number {
+    if (GameDB.currentWeek === 0 || force) {
+      GameDB.currentWeek = 1;
+
+      const db = GameDB.getInstance();
+      
+      for(const game of db.allGames().sort((a, b) => a.date.getTime() - b.date.getTime())) {
+        if (game.data.state !== GameState.COMPLETE) {
+          GameDB.currentWeek = game.data.week;
+          break;
+        }
+      }
+    }
+
+    return GameDB.currentWeek;
   }
 }
 
