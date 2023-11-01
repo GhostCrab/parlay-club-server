@@ -11,7 +11,8 @@ export interface PickSetUpdate {
 
 class PickDB {
   private static db: PickDB;
-  private dbPath = path.resolve(path.join(__dirname, '../../db/picks'));
+  //private dbPath = path.resolve(path.join(__dirname, '../../db/picks'));
+  private dbPath = '/usr/local/db/picks';
 
   private picks: IPick[] = [];
 

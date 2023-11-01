@@ -6,7 +6,8 @@
   "scripts": {
     "dev-es": "esrun --watch src/server.ts",
     "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --ignore \"src/**/*.spec.ts\" --exec \"ts-node src/server.ts\"",
-    "build": "rm -rf build/ && tsc"
+    "build": "rm -rf build/ && tsc",
+    "deploy": "rm -rf build/ && tsc && pkg -t node18-linux-arm64 ./build/server.js && sudo mv -f ./server /usr/local/bin/nflpc-service && sudo systemctl restart nflpc-server.service"
   },
   "author": "",
   "license": "ISC",

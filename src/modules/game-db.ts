@@ -5,7 +5,8 @@ import path from "path";
 class GameDB {
   private static db: GameDB;
   private static currentWeek: number = 0;
-  private dbPath = path.resolve(path.join(__dirname, '../../db/games'));
+  //private dbPath = path.resolve(path.join(__dirname, '../../db/games'))
+  private dbPath = '/usr/local/db/games';
 
   private games: IGame[] = [];
   private gamesByID: Record<number, IGame>;
