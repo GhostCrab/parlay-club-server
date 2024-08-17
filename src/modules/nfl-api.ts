@@ -5,7 +5,7 @@ class NFLAPI {
   private static apiUrl = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard";
   private static apiSearchParams = {
     limit: '1000',
-    dates:  '2023',
+    dates:  '2024',
     seasontype: '2',
   };
 
