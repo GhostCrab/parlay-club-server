@@ -136,7 +136,7 @@ async function main(): Promise<void> {
         NFLAPI.getGamesForWeek(week).then((result) => {
           return result.json();
         }).then((data: ScoreboardData) => {
-          const updatedGames = gdb.ingest(data.events.filter(data => data.season.year === 2024).map(data => fromNFLAIPEvent(data)));
+          const updatedGames = gdb.ingest(data.events.filter(data => data.season.year === 2025).map(data => fromNFLAIPEvent(data)));
 
           if (updatedGames.length) {
             gdb.writeDB();
